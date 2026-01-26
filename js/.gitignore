@@ -1,0 +1,12 @@
+# 依赖
+node_modules/
+
+# 配置文件（包含敏感信息）
+config.yaml
+
+# 日志
+*.log
+logs/
+
+# 运行时
+.env

@@ -1,0 +1,22 @@
+# NapCat Docker 自动重启监控配置
+# 复制此文件为 config.yaml 并修改配置
+
+# 检测间隔（秒）
+check_interval: 10
+
+# 监控的容器列表
+containers:
+  - name: napcat-dev           # 容器名称（用于显示和 docker restart）
+    ssh_user: zyu              # SSH 用户名
+    ssh_host: 192.168.31.233   # SSH 主机 IP
+    ws_port: 3000              # 容器暴露的 WebSocket 端口
+    token: test                # WebSocket 连接的 access_token
+    auto_restart: true         # 是否自动重启（掉线时）
+
+  # 可以添加更多容器
+  # - name: napcat-naidong
+  #   ssh_user: zyu
+  #   ssh_host: 192.168.31.233
+  #   ws_port: 33000
+  #   token: your_token
+  #   auto_restart: true
