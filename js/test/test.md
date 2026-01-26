@@ -23,4 +23,9 @@ cd js
 # cd G:\GGames\Minecraft\shuyeyun\qq-bot\napcat-docker-auto-restart\js
 npm init -y
 npm install ws
+
+node .\test\test_get_login_info.js
+node .\test\test_get_status.js   
+
+
 ```

@@ -1,64 +1,9 @@
-# NapCat Docker Auto Restart
+# napcat-docker-auto-restart
+## 自动检测napcat docker容器里面的账号是否在线，并自动重启的工具捏
 
-NapCat Docker 容器在线状态监控与自动重启工具。
+> 使用场景：如果你和我一样，有 Linux 机器，用 SSH 连上去运维，挂 NapCat Docker，那么你也是本项目的受众之一 (
 
-定时检测 NapCat 容器的在线状态，如果检测到离线（如被顶下线），自动通过 SSH 重启容器。
-
-## 项目结构
-
-```
-napcat-docker-auto-restart/
-├── go/          # Go 实现（TODO）
-├── py/          # Python 实现
-└── js/          # JavaScript/Node.js 实现
-```
-
-## 功能
-
-- ✅ 定时检测容器在线状态（通过 WebSocket `get_status` 接口）
-- ✅ 支持多容器监控
-- ✅ 离线时自动通过 SSH 重启容器
-- ✅ 配置文件管理
-
-## 快速开始
-
-### Python 版本
-
-```bash
-cd py
-cp config.example.yaml config.yaml
-# 编辑 config.yaml
-pip install -r requirements.txt
-python src/main.py
-```
-
-### JavaScript 版本
-
-```bash
-cd js
-cp config.example.yaml config.yaml
-# 编辑 config.yaml
-npm install
-npm start
-```
-
-## 配置说明
-
-参考 `config.example.yaml`：
-
-```yaml
-check_interval: 10  # 检测间隔（秒）
-
-containers:
-  - name: napcat-dev           # 容器名称
-    ssh_user: zyu              # SSH 用户名
-    ssh_host: 192.168.31.233   # SSH 主机 IP
-    ws_port: 3000              # WebSocket 端口
-    token: test                # access_token
-    auto_restart: true         # 是否自动重启
-```
-
-## 前置要求
-
-- 配置好免密 SSH 登录到 Docker 宿主机
-- Docker 宿主机上有 sudo 权限执行 `docker restart`
+### 过程记录
+- 最开始想用py搞个demo，探索出一个稳定可用的业务逻辑
+- 然后稳定以后用go搞一个性能更高的
+- 至于js那一部分，最开始是想用wscat测试一下(因为npm上面确实有很多好用的命令行工具)，后面单纯好奇，js项目的开发流程( 所以也搞了一个

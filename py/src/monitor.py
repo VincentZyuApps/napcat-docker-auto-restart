@@ -76,21 +76,28 @@ def restart_container(container: ContainerConfig) -> Tuple[bool, str]:
     Returns:
         (success, message)
     """
-    ssh_cmd = f"ssh {container.ssh_user}@{container.ssh_host} 'sudo docker restart {container.name}'"
+    # 根据配置决定是否使用 sudo
+    if container.use_sudo:
+        docker_cmd = "/usr/bin/sudo /usr/bin/docker"
+    else:
+        docker_cmd = "/usr/bin/docker"
+    
+    ssh_cmd = f'ssh {container.ssh_user}@{container.ssh_host} "{docker_cmd} restart {container.name}"'
     
     try:
         result = subprocess.run(
             ssh_cmd,
             shell=True,
             capture_output=True,
-            text=True,
-            timeout=30
+            timeout=30,
+            encoding='utf-8',
+            errors='replace'
         )
         
         if result.returncode == 0:
             return True, f"容器 {container.name} 重启成功"
         else:
-            return False, f"重启失败: {result.stderr}"
+            return False, f"重启失败: {result.stderr.strip()}"
             
     except subprocess.TimeoutExpired:
         return False, "SSH 命令超时"

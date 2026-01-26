@@ -16,11 +16,13 @@ class ContainerConfig:
     ws_port: int
     token: str
     auto_restart: bool = True
+    use_sudo: bool = False      # 是否使用 sudo（如果用户在 docker 组则设为 False）
 
 @dataclass
 class AppConfig:
     """应用配置"""
-    check_interval: int
+    check_interval_ms: int          # 检测间隔（毫秒）
+    stagger_interval_ms: int        # 多容器心跳错开间隔（毫秒）
     containers: List[ContainerConfig]
 
 def load_config(config_path: str = None) -> AppConfig:
@@ -63,10 +65,12 @@ def load_config(config_path: str = None) -> AppConfig:
             ssh_host=c["ssh_host"],
             ws_port=c["ws_port"],
             token=c["token"],
-            auto_restart=c.get("auto_restart", True)
+            auto_restart=c.get("auto_restart", True),
+            use_sudo=c.get("use_sudo", False)
         ))
     
     return AppConfig(
-        check_interval=data.get("check_interval", 10),
+        check_interval_ms=data.get("check_interval_ms", 10000),
+        stagger_interval_ms=data.get("stagger_interval_ms", 500),
         containers=containers
     )

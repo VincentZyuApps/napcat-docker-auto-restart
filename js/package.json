@@ -1,11 +1,10 @@
 {
-  "name": "napcat-docker-auto-restart",
-  "version": "0.1.0",
-  "description": "NapCat Docker 容器在线状态监控与自动重启工具",
-  "main": "src/main.js",
+  "name": "napcat-docker-auto-restart-js",
+  "version": "0.0.1",
+  "description": "NapCat Docker 容器在线状态监控与自动重启工具 - 测试脚本",
   "scripts": {
-    "start": "node src/main.js",
-    "test": "node test/test_get_status.js"
+    "test:status": "node test/test_get_status.js",
+    "test:login": "node test/test_get_login_info.js"
   },
   "keywords": ["napcat", "docker", "monitor", "auto-restart"],
   "author": "",
