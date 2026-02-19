@@ -124,6 +124,9 @@ jobs:
           REPO="${{ github.repository }}"
           BASE_URL="https://github.com/${REPO}/releases/download/${VERSION}"
           
+          # 查找上一个 release tag（排除当前版本）
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${VERSION}$" | head -1)
+
           {
             echo "## 📦 NapCat Docker Auto Restart ${VERSION}"
             echo ""
@@ -139,8 +142,17 @@ jobs:
             echo "| macOS | ARM64 | [binary](${BASE_URL}/napcat-monitor-darwin-arm64-${VERSION}) |"
             echo ""
             echo "---"
-            echo "### Changelog"
-            git log --pretty=format:"- %s (\`%h\`)" -n 10
+            echo "### What's Changed"
+            echo ""
+            if [ -n "$PREV_TAG" ]; then
+              echo "Changes since **${PREV_TAG}**:"
+              echo ""
+              git log "${PREV_TAG}..HEAD" --pretty=format:"- %s (\`%h\`) — @%an" --reverse
+            else
+              echo "All changes since repository creation:"
+              echo ""
+              git log --pretty=format:"- %s (\`%h\`) — @%an" --reverse
+            fi
           } > release_notes.md
 
       - name: Create GitHub Release
