@@ -48,16 +48,20 @@ async def run_monitor(config: AppConfig):
     log(f"监控容器数量: {len(config.containers)}")
     
     for c in config.containers:
-        log(f"  - {c.name} @ {c.ssh_host}:{c.ws_port}")
+        status_str = "启用" if c.enabled else "禁用"
+        log(f"  - {c.name} ({status_str}) @ {c.ssh_host}:{c.ws_port}")
     
     print("-" * 50)
     
     while True:
         # 依次检测每个容器，错开间隔
-        for i, container in enumerate(config.containers):
+        # 过滤掉未启用的容器
+        enabled_containers = [c for c in config.containers if c.enabled]
+        
+        for i, container in enumerate(enabled_containers):
             await monitor_container(container)
             # 如果不是最后一个容器，等待错开间隔
-            if i < len(config.containers) - 1:
+            if i < len(enabled_containers) - 1:
                 await asyncio.sleep(config.stagger_interval_ms / 1000)
         
         print("-" * 50)

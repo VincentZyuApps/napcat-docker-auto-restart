@@ -10,16 +10,18 @@ stagger_interval_ms: 500
 
 # 监控的容器列表
 containers:
-  - name: napcat-dev           # 容器名称（用于显示和 docker restart）
-    ssh_user: zyu              # SSH 用户名
-    ssh_host: 192.168.31.233   # SSH 主机 IP
-    ws_port: 3000              # 容器暴露的 WebSocket 端口
-    token: test                # WebSocket 连接的 access_token
-    auto_restart: true         # 是否自动重启（掉线时）
-    use_sudo: false            # 是否使用 sudo（如果用户在 docker 组则设为 false）
+  - enabled: true              # Whether this container is enabled for checks
+    name: napcat-dev           # Container name (used for display and docker restart)
+    ssh_user: zyu              # SSH username
+    ssh_host: 192.168.31.233   # SSH host IP
+    ws_port: 3000              # WebSocket port exposed by the container
+    token: test                # WebSocket access_token
+    auto_restart: true         # Whether to auto-restart on disconnect
+    use_sudo: false            # Whether to use sudo (set to false if user is in docker group)
 
-# 可以添加更多容器
-# - name: napcat-naidong
+# You can add more containers
+# - enabled: true
+#   name: napcat-naidong
 #   ssh_user: zyu
 #   ssh_host: 192.168.31.233
 #   ws_port: 33000

@@ -1,0 +1,156 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  # Check commit message for flags and extract version
+  check:
+    name: Check commit message
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.flags.outputs.should_build }}
+      should_release: ${{ steps.flags.outputs.should_release }}
+      version: ${{ steps.flags.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse flags and version
+        id: flags
+        run: |
+          MSG="${{ github.event.head_commit.message }}"
+          
+          # Extract version from go/version.toml
+          # Format: version = "v1.0.0"
+          VERSION=$(grep 'version' go/version.toml | sed -E 's/version = "(.*)"/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "📦 Version: $VERSION"
+
+          # Default flags
+          BUILD=false
+          RELEASE=false
+
+          # Check triggers in commit message
+          if echo "$MSG" | grep -qi "build release"; then
+            BUILD=true
+            RELEASE=true
+          elif echo "$MSG" | grep -qi "build action"; then
+            BUILD=true
+          fi
+
+          # Always build on PR
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BUILD=true
+          fi
+
+          echo "should_build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "should_release=$RELEASE" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.os }}-${{ matrix.arch }}
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows
+            arch: amd64
+            suffix: .exe
+          - os: windows
+            arch: arm64
+            suffix: .exe
+          - os: linux
+            arch: amd64
+            suffix: ""
+          - os: linux
+            arch: arm64
+            suffix: ""
+          - os: darwin
+            arch: amd64
+            suffix: ""
+          - os: darwin
+            arch: arm64
+            suffix: ""
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: go/go.sum
+
+      - name: Build
+        working-directory: go
+        run: |
+          VERSION="${{ needs.check.outputs.version }}"
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o "../napcat-monitor-${{ matrix.os }}-${{ matrix.arch }}-${VERSION}${{ matrix.suffix }}" main.go
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: napcat-monitor-${{ matrix.os }}-${{ matrix.arch }}
+          path: napcat-monitor-${{ matrix.os }}-${{ matrix.arch }}-${{ needs.check.outputs.version }}${{ matrix.suffix }}
+
+  release:
+    name: Create Release
+    needs: [check, build]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Generate release notes
+        run: |
+          VERSION="${{ needs.check.outputs.version }}"
+          REPO="${{ github.repository }}"
+          BASE_URL="https://github.com/${REPO}/releases/download/${VERSION}"
+          
+          {
+            echo "## 📦 NapCat Docker Auto Restart ${VERSION}"
+            echo ""
+            echo "### ⬇️ Downloads"
+            echo ""
+            echo "| OS | Arch | Binary |"
+            echo "|----|------|--------|"
+            echo "| Windows | x86_64 | [exe](${BASE_URL}/napcat-monitor-windows-amd64-${VERSION}.exe) |"
+            echo "| Windows | ARM64 | [exe](${BASE_URL}/napcat-monitor-windows-arm64-${VERSION}.exe) |"
+            echo "| Linux | x86_64 | [binary](${BASE_URL}/napcat-monitor-linux-amd64-${VERSION}) |"
+            echo "| Linux | ARM64 | [binary](${BASE_URL}/napcat-monitor-linux-arm64-${VERSION}) |"
+            echo "| macOS | x86_64 | [binary](${BASE_URL}/napcat-monitor-darwin-amd64-${VERSION}) |"
+            echo "| macOS | ARM64 | [binary](${BASE_URL}/napcat-monitor-darwin-arm64-${VERSION}) |"
+            echo ""
+            echo "---"
+            echo "### Changelog"
+            git log --pretty=format:"- %s (\`%h\`)" -n 10
+          } > release_notes.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ needs.check.outputs.version }}"
+          FILES=(napcat-monitor-*)
+          gh release create "$VERSION" \
+            --title "Release $VERSION" \
+            --notes-file release_notes.md \
+            --latest \
+            "${FILES[@]}"

@@ -15,6 +15,7 @@ class ContainerConfig:
     ssh_host: str
     ws_port: int
     token: str
+    enabled: bool = True
     auto_restart: bool = True
     use_sudo: bool = False      # 是否使用 sudo（如果用户在 docker 组则设为 False）
 
@@ -65,6 +66,7 @@ def load_config(config_path: str = None) -> AppConfig:
             ssh_host=c["ssh_host"],
             ws_port=c["ws_port"],
             token=c["token"],
+            enabled=c.get("enabled", True),
             auto_restart=c.get("auto_restart", True),
             use_sudo=c.get("use_sudo", False)
         ))
