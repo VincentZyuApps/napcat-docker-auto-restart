@@ -39,7 +39,15 @@
 ## 🚀 快速开始
 
 ### 1. 下载
+
+#### Go 版本（推荐）
 前往 [Releases](https://github.com/VincentZyuApps/napcat-docker-auto-restart/releases) 页面下载对应系统的二进制文件。
+
+#### Python 版本
+```bash
+git clone https://github.com/VincentZyu233/napcat-docker-auto-restart.git
+cd napcat-docker-auto-restart/py
+```
 
 ### 2. ⚠️ 配置 SSH 免密登录（必须！）
 
