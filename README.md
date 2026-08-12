@@ -2,6 +2,9 @@
 
 # NapCat Docker Auto Restart 监控工具 捏 🐱
 
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?logo=github&logoColor=white)](https://github.com/VincentZyu233/napcat-docker-auto-restart)
+[![Gitee](https://img.shields.io/badge/Gitee-Repository-C71D23?logo=gitee&logoColor=white)](https://gitee.com/vincent-zyu/napcat-docker-auto-restart)
+
 自动检测 NapCat Docker 容器中的账号在线状态，并在检测到离线时自动通过 SSH 重启容器的轻量级工具。
 
 > **使用场景**：如果你跟我一样，在 Linux 机器上挂着 NapCat Docker，希望它在线状态更稳，那么你就是本项目的受众之一 (●'◡'●)
@@ -26,9 +29,9 @@
 | 依赖库 | 版本 | 说明 |
 |:---|:---|:---|
 | [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/) | 3.8+ | 编程语言 |
-| [![WebSockets](https://img.shields.io/badge/WebSockets-16.0-333333?style=flat-square)](https://github.com/python-websockets/websockets) | 16.0 | WebSocket 通信 |
-| [![PyYAML](https://img.shields.io/badge/PyYAML-6.0.3-CC0200?style=flat-square)](https://pyyaml.org/) | 6.0.3 | YAML 配置解析 |
-| [![Requests](https://img.shields.io/badge/Requests-2.32.5-3776AB?style=flat-square)](https://requests.readthedocs.io/) | 2.32.5 | HTTP 请求库 |
+| [![WebSockets](https://img.shields.io/badge/WebSockets-16.0-FFD43B?style=flat-square&logo=python&logoColor=3776AB)](https://github.com/python-websockets/websockets) | 16.0 | WebSocket 通信 |
+| [![PyYAML](https://img.shields.io/badge/PyYAML-6.0.3-FFD43B?style=flat-square&logo=python&logoColor=3776AB)](https://pyyaml.org/) | 6.0.3 | YAML 配置解析 |
+| [![Requests](https://img.shields.io/badge/Requests-2.32.5-FFD43B?style=flat-square&logo=python&logoColor=3776AB)](https://requests.readthedocs.io/) | 2.32.5 | HTTP 请求库 |
 
 ---
 
@@ -41,47 +44,58 @@ git clone https://github.com/VincentZyu233/napcat-docker-auto-restart.git
 cd napcat-docker-auto-restart/py
 ```
 
-### 2. ⚠️ 配置 SSH 免密登录（必须！）
+### 2. SSH 免密登录配置（可选，推荐）
 
-**重要提示**：本工具通过 SSH 远程重启容器，**必须配置免密登录**，否则会卡在密码输入提示导致超时失败。
+配置后，`scp` 和 `ssh` 不再需要输入密码，监控程序可以自动执行远程重启命令。完整说明请参考：[SSH CLI 使用与免密登录配置](https://vincentzyu-vitepress.pages.dev/notes/cli-tools/ssh-cli.html)。
 
 **注意事项**：
-- 确认**运行本程序的用户**（如 `root` 或普通用户）
-- 该用户需要能免密 SSH 到**远程服务器的目标用户**（配置文件中的 `ssh_user`）
+- 确认**运行本程序的用户**（如 `root` 或普通用户）。
+- 该用户需要能免密 SSH 到**远程服务器的目标用户**（配置文件中的 `ssh_user`）。
+- 如果程序通过 systemd 或 MCSManager 等服务运行，需要为实际运行该服务的用户配置密钥。
 
-#### Windows 11 PowerShell → Linux 免密登录
+#### Windows PowerShell
+
+> ⚠️ PowerShell 管道会将公钥内容和 SSH 密码提示混淆，请勿使用 `type | ssh` 管道。下面是更稳妥的方式。
 
 ```powershell
-# 1. 生成 SSH 密钥（如果还没有）
-ssh-keygen -t ed25519
+# 1. 生成密钥（已有可跳过）
+ssh-keygen -t ed25519 -C "YourName-Win"
 
-# 2. 复制公钥到远程服务器
-type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh user@remote_host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+# 2. 先读取公钥，再上传到服务器（需输入一次密码）
+$key = Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
+ssh root@<YOUR_SERVER> "mkdir -p ~/.ssh && echo '$key' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 
-# 3. 测试免密登录
-ssh user@remote_host "echo '连接成功'"
+# 3. 验证免密登录（不再要求输入密码即为成功）
+ssh root@<YOUR_SERVER> "echo '✅ SSH 免密登录配置成功！'"
 ```
 
-#### Linux → Linux 免密登录
+#### Windows CMD
+
+```batch
+REM 1. 生成密钥（已有可跳过）
+ssh-keygen -t ed25519 -C "YourName-Win"
+
+REM 2. 上传公钥到服务器（需输入一次密码）
+type "%USERPROFILE%\.ssh\id_ed25519.pub" | ssh -p 22 root@<YOUR_SERVER> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+
+REM 3. 验证免密登录
+ssh root@<YOUR_SERVER> "echo '✅ SSH 免密登录配置成功！'"
+```
+
+#### Linux / WSL
 
 ```bash
-# 1. 生成 SSH 密钥（如果还没有）
-ssh-keygen -t ed25519 -N ""
+# 1. 生成密钥（已有可跳过）
+ssh-keygen -t ed25519 -C "YourName-Linux"
 
-# 2. 复制公钥到远程服务器
-ssh-copy-id user@remote_host
+# 2. 一键上传公钥（需输入一次密码）
+ssh-copy-id -p 22 root@<YOUR_SERVER>
 
-# 3. 测试免密登录
-ssh user@remote_host "echo '连接成功'"
+# 3. 验证免密登录
+ssh root@<YOUR_SERVER> "echo '✅ SSH 免密登录配置成功！'"
 ```
 
-**特别提醒**：如果程序以 `root` 用户运行（如通过 systemd 或 MCSManager），需要为 `root` 用户配置免密登录：
-
-```bash
-sudo su - root
-ssh-keygen -t ed25519 -N ""
-ssh-copy-id user@remote_host
-```
+> 建议使用 `ed25519` 算法，它比 RSA 更安全且密钥更短。私钥文件权限应设置为 `600`。
 
 ### 3. 配置 (`config.yaml`)
 配置文件使用 YAML 格式，可以参考 `py/config.example.yaml`。
