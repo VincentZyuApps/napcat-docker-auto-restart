@@ -1,13 +1,44 @@
 const WebSocket = require('ws');
+const { parseArgs } = require('node:util');
 
 // 配置信息
-const url = 'ws://192.168.31.233:3000?access_token=test';
+const DEFAULT_URL = 'ws://192.168.31.51:13000?access_token=dev';
+
+function getWebSocketUrl() {
+    let url;
+
+    try {
+        const { values } = parseArgs({
+            options: {
+                url: { type: 'string' }
+            }
+        });
+        url = values.url ?? DEFAULT_URL;
+    } catch (err) {
+        console.error(`❌ 参数错误: ${err.message}`);
+        process.exit(1);
+    }
+
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== 'ws:' && parsedUrl.protocol !== 'wss:') {
+            throw new Error('仅支持 ws:// 或 wss:// 地址');
+        }
+    } catch (err) {
+        console.error(`❌ 无效的 WebSocket URL: ${url} (${err.message})`);
+        process.exit(1);
+    }
+
+    return url;
+}
+
+const url = getWebSocketUrl();
 
 // 创建连接
 const ws = new WebSocket(url);
 
 ws.on('open', function open() {
-    console.log('✅ 已连接到 NapCat 服务器');
+    console.log(`✅ 已连接到 NapCat 服务器: ${url}`);
 
     // 构造请求包
     const requestData = {

@@ -9,13 +9,6 @@ venv/
 config.yaml
 */config.yaml
 
-# Go
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
 # 日志
 *.log
 logs/

@@ -1,8 +1,6 @@
-![napcat-docker-auto-restart](https://socialify.git.ci/VincentZyu233/napcat-docker-auto-restart/image?custom_language=Go&description=1&font=Inter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fc%2Fc3%2FPython-logo-notext.svg%2F120px-Python-logo-notext.svg.png&name=1&owner=1&pattern=Charlie+Brown&pulls=1&stargazers=1&theme=Auto)
+![napcat-docker-auto-restart](https://socialify.git.ci/VincentZyu233/napcat-docker-auto-restart/image?custom_language=Python&description=1&font=Inter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fc%2Fc3%2FPython-logo-notext.svg%2F120px-Python-logo-notext.svg.png&name=1&owner=1&pattern=Charlie+Brown&pulls=1&stargazers=1&theme=Auto)
 
 # NapCat Docker Auto Restart 监控工具 捏 🐱
-
-[![Build & Release](https://github.com/VincentZyuApps/napcat-docker-auto-restart/actions/workflows/build.yml/badge.svg)](https://github.com/VincentZyuApps/napcat-docker-auto-restart/actions/workflows/build.yml)
 
 自动检测 NapCat Docker 容器中的账号在线状态，并在检测到离线时自动通过 SSH 重启容器的轻量级工具。
 
@@ -12,13 +10,11 @@
 
 ## ✨ 核心特性
 
-- **多版本可选**：
-  - **Go 版本 (推荐)**：高性能、跨平台单文件，解压即用，资源分配极低。
-  - **Python 版本**：适合开发者调试或对源码有定制需求的场景。
+- **易于定制**：使用 Python 实现，便于调试和按需修改。
 - **智能策略**：
   - 支持配置多个容器，每个容器可独立开启/关闭。
   - **心跳错位**：支持设置多个容器间的检测错开时间，避免瞬间打满宿主机资源。
-- **全平台支持**：提供 Windows, Linux, macOS (x64 & ARM64) 的预编译版本。
+- **跨平台运行**：支持安装了 Python 3.8+ 的 Windows、Linux 和 macOS。
 - **自动恢复**：通过 WebSocket 实时获取 Bot 运行状态，非在线即触发 SSH 执行 `docker restart`。
 
 ---
@@ -40,10 +36,6 @@
 
 ### 1. 下载
 
-#### Go 版本（推荐）
-前往 [Releases](https://github.com/VincentZyuApps/napcat-docker-auto-restart/releases) 页面下载对应系统的二进制文件。
-
-#### Python 版本
 ```bash
 git clone https://github.com/VincentZyu233/napcat-docker-auto-restart.git
 cd napcat-docker-auto-restart/py
@@ -92,7 +84,7 @@ ssh-copy-id user@remote_host
 ```
 
 ### 3. 配置 (`config.yaml`)
-不管是 Python 还是 Go 版本，都使用统一的 YAML 配置文件。你可以参考各目录下的 `config.example.yaml`。
+配置文件使用 YAML 格式，可以参考 `py/config.example.yaml`。
 
 ```yaml
 check_interval_ms: 10000     # 总检测频率
@@ -106,13 +98,13 @@ containers:
     ws_port: 3000             # NapCat 的 WS 端口
     token: your_token         # Access Token
     auto_restart: true        # 离线是否自动重启
-    use_sudo: false           # 是否使用 sudo（Python 版本）
+    use_sudo: false           # 是否使用 sudo
 ```
 
 **配置说明**：
-- `use_sudo`: 仅 Python 版本使用。如果 SSH 用户不在 docker 组，需设为 `true` 并配置 sudo 免密（见下方）
+- `use_sudo`: 如果 SSH 用户不在 docker 组，需设为 `true` 并配置 sudo 免密（见下方）
 
-#### 配置 sudo 免密（可选，仅 Python 版本需要）
+#### 配置 sudo 免密（可选）
 
 如果 `use_sudo: true`，需在 Docker 宿主机上配置：
 
@@ -130,13 +122,6 @@ sudo usermod -aG docker zyu
 
 ### 4. 运行
 
-#### **Go 版本 (推荐)**
-```bash
-# 直接运行编译好的产物即可
-./napcat-monitor-linux-amd64-v1.0.0
-```
-
-#### **Python 版本**
 ```bash
 cd py
 pip install -r requirements.txt
@@ -167,17 +152,14 @@ docker run -d \
 ---
 
 ## 📂 项目结构
-- `go/`: Go 实现的主程序，包含 `build.py` 跨平台打包脚本。
-- `py/`: Python 实现的主程序，方便二次开发。
+- `py/`: Python 实现的主程序。
 - `js/`: 最初用于探索 WebSocket 接口逻辑的测试脚本。
-- `.github/`: 全自动化构建流水线。
 
 ---
 
 ## 💡 开发背景
-1. 最开始想用 Python 快速撸个 Demo，搞定稳定的业务逻辑。
-2. 逻辑验证通过后，用 Go 重写了一个更高性能、发布更简单的版本。
-3. JS 的部分最初是想用 `wscat` 测试，后来单纯好奇前端流程也顺手揉了一份捏。
+1. 最开始使用 Python 快速验证并实现业务逻辑。
+2. JS 的部分最初用于测试 WebSocket 接口，现保留为探索性测试脚本。
 
 ---
 
